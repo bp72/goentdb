@@ -13,6 +13,17 @@ const (
 	OriginAlphaporno Origin = 8
 )
 
+var OriginNames = []string{
+	"Unkown",
+	"Xvideos",
+	"Porntube",
+	"Eporner",
+	"Pornone",
+	"Cumlouder",
+	"Superporn",
+	"Alphaporno",
+}
+
 type EntKeywordType uint
 
 const (
