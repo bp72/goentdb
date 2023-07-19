@@ -17,26 +17,25 @@ func TestEntDBCreate(t *testing.T) {
 	}
 }
 
-func GenerateEntVideos() []*EntVideo {
-	video1 := &EntVideo{
-		Id:    uint(1),
-		Title: "title number 1",
-		Slug:  "title-number-1",
-		Tags: []*EntKeyword{
-			&EntKeyword{Phrase: "tag 1", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 2", Type: EntKeywordTag},
-		},
-		Models: []*EntKeyword{
-			&EntKeyword{Phrase: "model 1", Type: EntKeywordModel},
-			&EntKeyword{Phrase: "model 2", Type: EntKeywordModel},
-		},
-		Keywords: []*EntKeyword{
-			&EntKeyword{Phrase: "aaa bbb ccc", Type: EntKeywordKeyword},
-			&EntKeyword{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
-		},
+func GenerateEntVideos(edb *EntDB) []*EntVideo {
+	video1 := NewEntVideo(edb)
+	video1.Id = uint(123456)
+	video1.Title = "title number 1"
+	video1.Slug = "title-number-1"
+	video1.Tags = []*EntKeyword{
+		&EntKeyword{Phrase: "tag 1", Type: EntKeywordTag},
+		&EntKeyword{Phrase: "tag 2", Type: EntKeywordTag},
+	}
+	video1.Models = []*EntKeyword{
+		&EntKeyword{Phrase: "model 1", Type: EntKeywordModel},
+		&EntKeyword{Phrase: "model 2", Type: EntKeywordModel},
+	}
+	video1.Keywords = []*EntKeyword{
+		&EntKeyword{Phrase: "aaa bbb ccc", Type: EntKeywordKeyword},
+		&EntKeyword{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
 	}
 	video2 := &EntVideo{
-		Id:    uint(1),
+		Id:    uint(123457),
 		Title: "title number 2",
 		Slug:  "title-number-2",
 		Tags: []*EntKeyword{
@@ -52,7 +51,7 @@ func GenerateEntVideos() []*EntVideo {
 		},
 	}
 	video3 := &EntVideo{
-		Id:    uint(1),
+		Id:    uint(123458),
 		Title: "title number 3",
 		Slug:  "title-number-3",
 		Tags: []*EntKeyword{
@@ -78,7 +77,7 @@ func GenerateEntVideos() []*EntVideo {
 func TestEntDBAdd(t *testing.T) {
 	entdb := NewEntDB("/tmp")
 
-	videos := GenerateEntVideos()
+	videos := GenerateEntVideos(entdb)
 
 	for _, video := range videos {
 		entdb.Add(video)
@@ -112,7 +111,7 @@ func TestEntDBAdd(t *testing.T) {
 func TestEntDBGetVideo(t *testing.T) {
 	entdb := NewEntDB("/tmp")
 
-	videos := GenerateEntVideos()
+	videos := GenerateEntVideos(entdb)
 
 	for _, video := range videos {
 		entdb.Add(video)

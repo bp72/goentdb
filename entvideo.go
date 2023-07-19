@@ -42,7 +42,8 @@ type EntVideo struct {
 	Keywords   []*EntKeyword
 	ThumbUrls  []string
 	VideoUrls  []string
-	MapKeyword map[string]*EntKeyword
+	MapKeyword map[string]*EntKeyword // Ad-hoc. TODO review later
+	Owner      *EntDB                 // Ad-hoc. TODO review later
 }
 
 func (ev *EntVideo) IsRefererDisabled() bool {
@@ -98,7 +99,7 @@ func (ev *EntVideo) GetPosterThumb() string {
 func (ev *EntVideo) GetThumb() string {
 	// TODO: depricate this function
 	// Backwards compatability
-	return fmt.Sprintf("https://localhost:18443/thumbs/%s", ev.GetPosterThumbRelatedPath())
+	return fmt.Sprintf("%s/%s", ev.Owner.ThumbBaseUrl, ev.GetPosterThumbRelatedPath())
 }
 
 func (ev *EntVideo) GetMD5() string {
@@ -169,8 +170,9 @@ func (ev *EntVideo) ToLoad() EntVideoForLoad {
 	return evfl
 }
 
-func NewEntVideo() *EntVideo {
+func NewEntVideo(edb *EntDB) *EntVideo {
 	return &EntVideo{
 		MapKeyword: make(map[string]*EntKeyword),
+		Owner:      edb,
 	}
 }

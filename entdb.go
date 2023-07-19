@@ -15,17 +15,18 @@ import (
 //Запилить ссылки с тег -[]*EnvtVideo
 
 type EntDB struct {
-	StoragePath string
-	Items       []*EntVideo
-	SeoPool     []*EntKeyword
-	Tags        map[string][]*EntVideo
-	Models      map[string][]*EntVideo
-	Search      map[string][]*EntVideo
-	Keywords    map[string]*EntVideo
-	DictTags    map[int]*EntKeyword
-	DictModels  map[int]*EntKeyword
-	lock        sync.RWMutex
-	Origins     map[Origin]int
+	StoragePath  string
+	Items        []*EntVideo
+	SeoPool      []*EntKeyword
+	Tags         map[string][]*EntVideo
+	Models       map[string][]*EntVideo
+	Search       map[string][]*EntVideo
+	Keywords     map[string]*EntVideo
+	DictTags     map[int]*EntKeyword
+	DictModels   map[int]*EntKeyword
+	lock         sync.RWMutex
+	Origins      map[Origin]int
+	ThumbBaseUrl string
 }
 
 func (edb *EntDB) GetDictTagsPath() string {
@@ -86,6 +87,7 @@ func (edb *EntDB) Add(video *EntVideo) {
 	edb.lock.Lock()
 	defer edb.lock.Unlock()
 
+	video.Owner = edb
 	edb.Items = append(edb.Items, video)
 	for _, tag := range video.Tags {
 		edb.Tags[tag.GetSlug()] = append(edb.Tags[tag.GetSlug()], video)
@@ -115,7 +117,7 @@ func (edb *EntDB) Add(video *EntVideo) {
 }
 
 func (edb *EntDB) AddVideoFromLoad(evfl *EntVideoForLoad) {
-	ev := NewEntVideo()
+	ev := NewEntVideo(edb)
 
 	ev.Id = evfl.Id
 	ev.Title = evfl.Title
