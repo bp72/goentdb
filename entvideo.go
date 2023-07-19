@@ -107,8 +107,11 @@ func (ev *EntVideo) GetMD5() string {
 }
 
 func (ev *EntVideo) GetRandomKeyword() *EntKeyword {
-	keyword := ev.Keywords[rand.Intn(len(ev.Keywords))]
-	return keyword
+	if len(ev.Keywords) > 0 {
+		keyword := ev.Keywords[rand.Intn(len(ev.Keywords))]
+		return keyword
+	}
+	return NewKeyword(0, "not-found")
 }
 
 func (ev *EntVideo) AddTag(tag *EntKeyword) {

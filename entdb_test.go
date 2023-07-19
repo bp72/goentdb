@@ -71,7 +71,25 @@ func GenerateEntVideos(edb *EntDB) []*EntVideo {
 		},
 	}
 
-	return []*EntVideo{video1, video2, video3}
+	video4 := &EntVideo{
+		Id:    uint(123459),
+		Title: "title number 4 (no keywords)",
+		Slug:  "title-number-4-no-keywords",
+		Tags: []*EntKeyword{
+			&EntKeyword{Phrase: "tag 3", Type: EntKeywordTag},
+			&EntKeyword{Phrase: "tag 4", Type: EntKeywordTag},
+			&EntKeyword{Phrase: "tag 5", Type: EntKeywordTag},
+			&EntKeyword{Phrase: "tag 6", Type: EntKeywordTag},
+		},
+		Models: []*EntKeyword{
+			&EntKeyword{Phrase: "model 4", Type: EntKeywordModel},
+			&EntKeyword{Phrase: "model 5", Type: EntKeywordModel},
+			&EntKeyword{Phrase: "model 6", Type: EntKeywordModel},
+		},
+		Keywords: []*EntKeyword{},
+	}
+
+	return []*EntVideo{video1, video2, video3, video4}
 }
 
 func TestEntDBAdd(t *testing.T) {
@@ -83,7 +101,7 @@ func TestEntDBAdd(t *testing.T) {
 		entdb.Add(video)
 	}
 
-	Expected := 3
+	Expected := 4
 	Got := len(entdb.Items)
 	if Got != Expected {
 		t.Errorf("test add video to DB failed: got %v, wanted %v", Got, Expected)
@@ -101,10 +119,13 @@ func TestEntDBAdd(t *testing.T) {
 		t.Errorf("test add video to DB models count failed: got %v, wanted %v", Got, Expected)
 	}
 
-	Expected = 8
+	Expected = 9
 	Got = len(entdb.Keywords)
 	if Got != Expected {
 		t.Errorf("test add video to DB keywords count failed: got %v, wanted %v", Got, Expected)
+		for kw, ev := range entdb.Keywords {
+			t.Errorf("kw %s -> %d\n", kw, ev.Id)
+		}
 	}
 }
 
