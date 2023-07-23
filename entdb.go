@@ -226,7 +226,6 @@ func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 }
 
 func (ev *EntDB) RandomSetByModel(ModelSlug string, Size int) ([]*EntVideo, int) {
-
 	models, exists := ev.Models[ModelSlug]
 
 	if !exists {
@@ -235,18 +234,25 @@ func (ev *EntDB) RandomSetByModel(ModelSlug string, Size int) ([]*EntVideo, int)
 
 	var candidate *EntVideo
 
+	// if expected size bigger than actual list then just take a list
 	if Size >= len(models) {
 		return models, len(models)
 	}
 
 	seen := make(map[*EntVideo]bool)
 	res := make([]*EntVideo, Size)
+	taken := 0
 
-	for i := 0; i < Size; i++ {
+	// While taken less than expected and didn't see every item
+	for taken < Size && len(seen) < len(models) {
 		candidate = models[rand.Intn(len(models))]
+		if candidate == nil {
+			continue
+		}
 		if _, exists := seen[candidate]; !exists {
-			res[i] = candidate
+			res[taken] = candidate
 			seen[candidate] = true
+			taken++
 		}
 	}
 
@@ -268,12 +274,16 @@ func (ev *EntDB) RandomSetByTag(TagSlug string, Size int) ([]*EntVideo, int) {
 
 	seen := make(map[*EntVideo]bool)
 	res := make([]*EntVideo, Size)
-
-	for i := 0; i < Size; i++ {
+	taken := 0
+	for taken < Size && len(seen) < len(tags) {
 		candidate = tags[rand.Intn(len(tags))]
+		if candidate == nil {
+			continue
+		}
 		if _, exists := seen[candidate]; !exists {
-			res[i] = candidate
+			res[taken] = candidate
 			seen[candidate] = true
+			taken++
 		}
 	}
 
