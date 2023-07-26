@@ -172,6 +172,10 @@ func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bo
 
 	videos, _ := edb.RelevantBySearch(Video, 300)
 
+	if len(videos) < 20 {
+		return edb.GetKeywordsRandomSet(Size, UseSeoPool, Exclude)
+	}
+
 	pos := 0
 	cur := 0
 	for pos < Size {
