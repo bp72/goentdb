@@ -105,8 +105,12 @@ func (edb *EntDB) Add(video *EntVideo) {
 
 	edb.Origins[video.Origin]++
 
-	Tokens := strings.Split(strings.ToLower(video.Title), " ")
-	for _, token := range Tokens {
+	title := strings.ToLower(video.Title)
+	title = strings.Replace(title, "-", " ", -1)
+	tokens := strings.Split(title, " ")
+
+	for _, token := range tokens {
+		token = strings.Trim(token, TrimSymbols)
 		if len(token) < 3 {
 			continue
 		}
@@ -170,7 +174,7 @@ func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, Size)
 
-	videos, _ := edb.RelevantBySearch(Video, 300)
+	videos, _ := edb.RelevantBySearch(Video.Slug, 300)
 
 	if len(videos) < 20 {
 		return edb.GetKeywordsRandomSet(Size, UseSeoPool, Exclude)
@@ -255,12 +259,17 @@ func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 /*
 	Get slice of random EntVideos based on query filter
 */
-func (edb *EntDB) RelevantBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
-	QueryTokens := strings.Split(strings.ToLower(Video.Title), " ")
+func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
+	QueryTokens := strings.Split(strings.ToLower(Slug), "-")
 	Counter := make(map[*EntVideo]int)
 
-	for _, Token := range QueryTokens {
-		if videos, exists := edb.Search[Token]; exists {
+	for _, token := range QueryTokens {
+		token = strings.Trim(token, TrimSymbols)
+		if len(token) < 3 {
+			continue
+		}
+
+		if videos, exists := edb.Search[token]; exists {
 			for _, video := range videos {
 				Counter[video]++
 			}
