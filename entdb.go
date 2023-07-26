@@ -167,6 +167,29 @@ func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 	return nil, errors.New("EntVideo not found")
 }
 
+func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
+	res := make([]*EntKeyword, Size)
+
+	videos, _ := edb.RelevantBySearch(Video, 300)
+
+	pos := 0
+	cur := 0
+	for pos < Size {
+		ev := videos[cur%len(videos)]
+		// ev := edb.Random()
+		// TODO: if (ev not in Exclude and ev not in Taken) {
+		// Check if EntVideo has any associated EntKeyword
+		if len(ev.Keywords) > 0 {
+			res[pos] = ev.GetRandomKeyword()
+			pos++
+		}
+		cur++
+		//}
+	}
+
+	return res
+}
+
 func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, Size)
 
@@ -191,6 +214,45 @@ func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []*Ent
 */
 func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 	QueryTokens := strings.Split(strings.ToLower(Query), " ")
+	Counter := make(map[*EntVideo]int)
+
+	for _, Token := range QueryTokens {
+		if videos, exists := edb.Search[Token]; exists {
+			for _, video := range videos {
+				Counter[video]++
+			}
+		}
+	}
+
+	type KeyValue struct {
+		Video *EntVideo
+		Value int
+	}
+
+	var SortedSlice []KeyValue
+
+	for k, v := range Counter {
+		SortedSlice = append(SortedSlice, KeyValue{k, v})
+	}
+
+	sort.Slice(SortedSlice, func(i, j int) bool {
+		return SortedSlice[i].Value > SortedSlice[j].Value
+	})
+
+	res := make([]*EntVideo, Min(len(SortedSlice), Size))
+
+	for i := 0; i < Min(len(SortedSlice), Size); i++ {
+		res[i] = SortedSlice[i].Video
+	}
+
+	return res, len(SortedSlice)
+}
+
+/*
+	Get slice of random EntVideos based on query filter
+*/
+func (edb *EntDB) RelevantBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
+	QueryTokens := strings.Split(strings.ToLower(Video.Title), " ")
 	Counter := make(map[*EntVideo]int)
 
 	for _, Token := range QueryTokens {
