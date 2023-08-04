@@ -172,7 +172,7 @@ func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 }
 
 func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
-	res := make([]*EntKeyword, Size)
+	res := make([]*EntKeyword, 0)
 
 	videos, _ := edb.RelevantBySearch(Video.Slug, 300)
 
@@ -180,19 +180,21 @@ func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bo
 		return edb.GetKeywordsRandomSet(Size, UseSeoPool, Exclude)
 	}
 
-	pos := 0
 	cur := 0
-	for pos < Size {
+	maxCur := 1000
+	for len(res) < Size {
 		ev := videos[cur%len(videos)]
 		// ev := edb.Random()
 		// TODO: if (ev not in Exclude and ev not in Taken) {
 		// Check if EntVideo has any associated EntKeyword
 		if len(ev.Keywords) > 0 {
-			res[pos] = ev.GetRandomKeyword()
-			pos++
+			res = append(res, ev.GetRandomKeyword())
 		}
 		cur++
 		//}
+		if cur == maxCur {
+			break
+		}
 	}
 
 	return res
@@ -260,6 +262,16 @@ func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 	Get slice of random EntVideos based on query filter
 */
 func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
+
+	Weights := map[string]int{
+		"video": 10,
+		"porn":  6,
+		"sex":   4,
+		"fuck":  4,
+		"xxx":   4,
+		"xnxx":  5,
+	}
+
 	QueryTokens := strings.Split(strings.ToLower(Slug), "-")
 	Counter := make(map[*EntVideo]int)
 
@@ -271,7 +283,11 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 
 		if videos, exists := edb.Search[token]; exists {
 			for _, video := range videos {
-				Counter[video]++
+				if weight, found := Weights[token]; found {
+					Counter[video] = Counter[video] + weight
+				} else {
+					Counter[video]++
+				}
 			}
 		}
 	}
@@ -392,10 +408,13 @@ func (edb *EntDB) RandomKeywordSet(Size int, useSeoPool bool) []*EntKeyword {
 }
 
 func (edb *EntDB) RandomKeywordSetFromGeneralPool(Size int) []*EntKeyword {
-	res := make([]*EntKeyword, Size)
+	res := make([]*EntKeyword, 0)
 
-	for i := 0; i < Size; i++ {
-		res[i] = edb.Random().GetRandomKeyword()
+	for len(res) < Size {
+		kw := edb.Random().GetRandomKeyword()
+		if kw.Phrase != "not-found" {
+			res = append(res, kw)
+		}
 	}
 
 	return res
