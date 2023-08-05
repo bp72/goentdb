@@ -3,6 +3,7 @@ package goentdb
 import (
 	"errors"
 	"fmt"
+	"html"
 	"math/rand"
 	"strings"
 	"time"
@@ -44,6 +45,10 @@ type EntVideo struct {
 	VideoUrls  []string
 	MapKeyword map[string]*EntKeyword // Ad-hoc. TODO review later
 	Owner      *EntDB                 // Ad-hoc. TODO review later
+}
+
+func (ev *EntVideo) GetTitle() string {
+	return html.UnescapeString(ev.Title)
 }
 
 func (ev *EntVideo) IsRefererDisabled() bool {
