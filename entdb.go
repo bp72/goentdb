@@ -259,6 +259,54 @@ func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 }
 
 /*
+	GetRelevantForVideo
+	===================
+	relevant videos with similar tags and models
+*/
+func (edb *EntDB) GetRelevantForVideo(Video *EntVideo, Size int) ([]*EntVideo, int) {
+	Counter := make(map[*EntVideo]int)
+
+	for _, tag := range Video.Tags {
+		fmt.Printf("tag: %v\n", tag)
+		videos, _ := edb.RandomSetByTag(tag.GetSlug(), Size)
+		for _, video := range videos {
+			Counter[video]++
+		}
+	}
+
+	for _, model := range Video.Models {
+		fmt.Printf("model: %v\n", model)
+		videos, _ := edb.RandomSetByModel(model.GetSlug(), Size)
+		for _, video := range videos {
+			Counter[video]++
+		}
+	}
+
+	type KeyValue struct {
+		Video *EntVideo
+		Value int
+	}
+
+	var SortedSlice []KeyValue
+
+	for k, v := range Counter {
+		SortedSlice = append(SortedSlice, KeyValue{k, v})
+	}
+
+	sort.Slice(SortedSlice, func(i, j int) bool {
+		return SortedSlice[i].Value > SortedSlice[j].Value
+	})
+
+	res := make([]*EntVideo, Min(len(SortedSlice), Size))
+
+	for i := 0; i < Min(len(SortedSlice), Size); i++ {
+		res[i] = SortedSlice[i].Video
+	}
+
+	return res, len(SortedSlice)
+}
+
+/*
 	Get slice of random EntVideos based on query filter
 */
 func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
