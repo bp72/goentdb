@@ -3,6 +3,7 @@ package goentdb
 import (
 	"errors"
 	"fmt"
+	"html"
 	"log"
 	"math/rand"
 	"os"
@@ -312,12 +313,12 @@ func (edb *EntDB) GetRelevantForVideo(Video *EntVideo, Size int) ([]*EntVideo, i
 func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 
 	Weights := map[string]int{
-		"video": 10,
-		"porn":  6,
-		"sex":   4,
-		"fuck":  4,
-		"xxx":   4,
-		"xnxx":  5,
+		"video": 0,
+		"porn":  0,
+		"sex":   0,
+		"fuck":  0,
+		"xxx":   0,
+		"xnxx":  0,
 	}
 
 	QueryTokens := strings.Split(strings.ToLower(Slug), "-")
@@ -325,6 +326,11 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 
 	for _, token := range QueryTokens {
 		token = strings.Trim(token, TrimSymbols)
+
+		if _, exists := StopWordsMap[token]; exists {
+			continue
+		}
+
 		if len(token) < 3 {
 			continue
 		}
@@ -348,6 +354,60 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 	var SortedSlice []KeyValue
 
 	for k, v := range Counter {
+		SortedSlice = append(SortedSlice, KeyValue{k, v})
+	}
+
+	sort.Slice(SortedSlice, func(i, j int) bool {
+		return SortedSlice[i].Value > SortedSlice[j].Value
+	})
+
+	res := make([]*EntVideo, Min(len(SortedSlice), Size))
+
+	for i := 0; i < Min(len(SortedSlice), Size); i++ {
+		res[i] = SortedSlice[i].Video
+	}
+
+	return res, len(SortedSlice)
+}
+
+/*
+	Get RelevantVideos for EntVideo
+	Exclude MainVideo from the result
+*/
+func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
+	Title := html.UnescapeString(Video.Title)
+	QueryTokens := strings.Split(strings.ToLower(Title), " ")
+	Counter := make(map[*EntVideo]int)
+
+	for _, token := range QueryTokens {
+		token = strings.Trim(token, TrimSymbols)
+
+		if _, exists := StopWordsMap[token]; exists {
+			continue
+		}
+
+		if len(token) < 3 {
+			continue
+		}
+
+		if videos, exists := edb.Search[token]; exists {
+			for _, video := range videos {
+				Counter[video]++
+			}
+		}
+	}
+
+	type KeyValue struct {
+		Video *EntVideo
+		Value int
+	}
+
+	var SortedSlice []KeyValue
+
+	for k, v := range Counter {
+		if k.Id == Video.Id {
+			continue
+		}
 		SortedSlice = append(SortedSlice, KeyValue{k, v})
 	}
 
