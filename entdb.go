@@ -25,6 +25,7 @@ type EntDB struct {
 	Keywords     map[string]*EntVideo
 	DictTags     map[int]*EntKeyword
 	DictModels   map[int]*EntKeyword
+	DictVideos   map[uint]*EntVideo
 	lock         sync.RWMutex
 	Origins      map[Origin]int
 	ThumbBaseUrl string
@@ -64,6 +65,17 @@ func (edb *EntDB) GetModelById(id int) (*EntKeyword, error) {
 	return nil, errors.New(fmt.Sprintf("EntKeyword(Model) not found: %d", id))
 }
 
+func (edb *EntDB) GetVideoById(id uint) (*EntVideo, error) {
+	edb.lock.RLock()
+	defer edb.lock.RUnlock()
+
+	if video, exists := edb.DictVideos[id]; exists {
+		return video, nil
+	}
+
+	return nil, errors.New(fmt.Sprintf("EntVideo not found: %d", id))
+}
+
 func (edb *EntDB) AddTag(tag *EntKeyword) {
 	edb.lock.Lock()
 	defer edb.lock.Unlock()
@@ -79,10 +91,10 @@ func (edb *EntDB) AddModel(model *EntKeyword) {
 }
 
 /*
-	Add video to the DB
-	- Add to slice for future slices and random access
-	- Add to tag/model -> []*EntVideo for tag/model slices
-	- Add to keyword -> *EntVideos map for original slug md5 and keyword slug md5 access
+Add video to the DB
+- Add to slice for future slices and random access
+- Add to tag/model -> []*EntVideo for tag/model slices
+- Add to keyword -> *EntVideos map for original slug md5 and keyword slug md5 access
 */
 func (edb *EntDB) Add(video *EntVideo) {
 	edb.lock.Lock()
@@ -104,6 +116,7 @@ func (edb *EntDB) Add(video *EntVideo) {
 		edb.Keywords[keyword.GetMD5()] = video
 	}
 
+	edb.DictVideos[video.Id] = video
 	edb.Origins[video.Origin]++
 
 	title := strings.ToLower(video.Title)
@@ -159,7 +172,7 @@ func (edb *EntDB) AddVideoFromLoad(evfl *EntVideoForLoad) {
 }
 
 /*
-	Get Video by original slug md5 or keyword slug md5
+Get Video by original slug md5 or keyword slug md5
 */
 func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 	edb.lock.RLock()
@@ -221,7 +234,7 @@ func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []*Ent
 }
 
 /*
-	Get slice of random EntVideos based on query filter
+Get slice of random EntVideos based on query filter
 */
 func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 	QueryTokens := strings.Split(strings.ToLower(Query), " ")
@@ -260,9 +273,9 @@ func (edb *EntDB) RandomSetBySearch(Query string, Size int) ([]*EntVideo, int) {
 }
 
 /*
-	GetRelevantForVideo
-	===================
-	relevant videos with similar tags and models
+GetRelevantForVideo
+===================
+relevant videos with similar tags and models
 */
 func (edb *EntDB) GetRelevantForVideo(Video *EntVideo, Size int) ([]*EntVideo, int) {
 	Counter := make(map[*EntVideo]int)
@@ -308,7 +321,7 @@ func (edb *EntDB) GetRelevantForVideo(Video *EntVideo, Size int) ([]*EntVideo, i
 }
 
 /*
-	Get slice of random EntVideos based on query filter
+Get slice of random EntVideos based on query filter
 */
 func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 
@@ -371,8 +384,8 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 }
 
 /*
-	Get RelevantVideos for EntVideo
-	Exclude MainVideo from the result
+Get RelevantVideos for EntVideo
+Exclude MainVideo from the result
 */
 func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
 	Title := html.UnescapeString(Video.Title)
@@ -506,7 +519,7 @@ func (edb *EntDB) Random() *EntVideo {
 }
 
 /*
-	Return random set of Keywords of specific size
+Return random set of Keywords of specific size
 */
 func (edb *EntDB) RandomKeywordSet(Size int, useSeoPool bool) []*EntKeyword {
 	if useSeoPool {
@@ -558,6 +571,7 @@ func NewEntDB(path string) *EntDB {
 		Keywords:    make(map[string]*EntVideo),
 		DictTags:    make(map[int]*EntKeyword),
 		DictModels:  make(map[int]*EntKeyword),
+		DictVideos:  make(map[uint]*EntVideo),
 		Origins:     make(map[Origin]int),
 	}
 }

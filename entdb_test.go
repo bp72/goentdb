@@ -163,6 +163,15 @@ func TestEntDBGetVideo(t *testing.T) {
 	if Got != Expected {
 		t.Errorf("test get video by keyword md5 failed: got %v, wanted %v", Got, Expected)
 	}
+
+	Expected = entdb.Items[2]
+	Got, err = entdb.GetVideoById(uint(123458))
+	if err != nil {
+		t.Errorf("test get video by id failed: %v", err)
+	}
+	if Got != Expected {
+		t.Errorf("test get video by id failed: got %v, wanted %v", Got, Expected)
+	}
 }
 
 func TestEntDBDumpLoadTags(t *testing.T) {
