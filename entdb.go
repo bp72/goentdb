@@ -150,6 +150,7 @@ func (edb *EntDB) AddVideoFromLoad(evfl *EntVideoForLoad) {
 	ev.Keywords = evfl.Keywords
 	ev.ThumbUrls = evfl.ThumbUrls
 	ev.VideoUrls = evfl.VideoUrls
+	ev.Aliases = evfl.Aliases
 
 	for _, tag_id := range evfl.Tags {
 		tag, err := edb.GetTagById(tag_id)

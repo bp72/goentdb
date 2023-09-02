@@ -25,6 +25,7 @@ type EntVideoForLoad struct {
 	Keywords   []*EntKeyword
 	ThumbUrls  []string
 	VideoUrls  []string
+	Aliases    []string
 }
 
 type EntVideo struct {
@@ -43,6 +44,7 @@ type EntVideo struct {
 	Keywords   []*EntKeyword
 	ThumbUrls  []string
 	VideoUrls  []string
+	Aliases    []string
 	MapKeyword map[string]*EntKeyword // Ad-hoc. TODO review later
 	Owner      *EntDB                 // Ad-hoc. TODO review later
 }
@@ -167,6 +169,7 @@ func (ev *EntVideo) ToLoad() EntVideoForLoad {
 	evfl.Keywords = ev.Keywords
 	evfl.ThumbUrls = ev.ThumbUrls
 	evfl.VideoUrls = ev.VideoUrls
+	evfl.Aliases = ev.Aliases
 
 	for _, tag := range ev.Tags {
 		evfl.Tags = append(evfl.Tags, tag.Id)
