@@ -56,7 +56,7 @@ var StopWords = []string{
 	"wasn", "wasn't", "weren", "weren't", "won", "won't", "wouldn", "wouldn't",
 }
 
-const TrimSymbols = ".!,:-)(/@$%^:&?*]["
+const TrimSymbols = ".!,:-)(/@$%^&?*]["
 
 var StopWordsMap = map[string]bool{
 	"and":        true,

@@ -26,6 +26,8 @@ type EntDB struct {
 	DictTags     map[int]*EntKeyword
 	DictModels   map[int]*EntKeyword
 	DictVideos   map[uint]*EntVideo
+	TwoGrams     map[string][]*EntVideo
+	ThreeGrams   map[string][]*EntVideo
 	lock         sync.RWMutex
 	Origins      map[Origin]int
 	ThumbBaseUrl string
@@ -51,7 +53,7 @@ func (edb *EntDB) GetTagById(id int) (*EntKeyword, error) {
 		return tag, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("EntKeyword(Tag) not found: %d", id))
+	return nil, fmt.Errorf("EntKeyword(Tag) not found: %d", id)
 }
 
 func (edb *EntDB) GetModelById(id int) (*EntKeyword, error) {
@@ -62,7 +64,7 @@ func (edb *EntDB) GetModelById(id int) (*EntKeyword, error) {
 		return model, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("EntKeyword(Model) not found: %d", id))
+	return nil, fmt.Errorf("EntKeyword(Model) not found: %d", id)
 }
 
 func (edb *EntDB) GetVideoById(id uint) (*EntVideo, error) {
@@ -73,7 +75,7 @@ func (edb *EntDB) GetVideoById(id uint) (*EntVideo, error) {
 		return video, nil
 	}
 
-	return nil, errors.New(fmt.Sprintf("EntVideo not found: %d", id))
+	return nil, fmt.Errorf("EntVideo not found: %d", id)
 }
 
 func (edb *EntDB) AddTag(tag *EntKeyword) {
@@ -128,10 +130,29 @@ func (edb *EntDB) Add(video *EntVideo) {
 		if len(token) < 3 {
 			continue
 		}
-		videos, _ := edb.Search[token]
+		videos := edb.Search[token]
 		edb.Search[token] = append(videos, video)
 	}
 
+	edb.IndexNGrams(video, false)
+}
+
+func (edb *EntDB) IndexNGrams(video *EntVideo, excludeStopWords bool) {
+	TwoGrams, ThreeGrams := video.GetNGrams(excludeStopWords)
+
+	for _, gram := range TwoGrams {
+		if _, exists := edb.TwoGrams[gram]; !exists {
+			edb.TwoGrams[gram] = make([]*EntVideo, 0)
+		}
+		edb.TwoGrams[gram] = append(edb.TwoGrams[gram], video)
+	}
+
+	for _, gram := range ThreeGrams {
+		if _, exists := edb.ThreeGrams[gram]; !exists {
+			edb.ThreeGrams[gram] = make([]*EntVideo, 0)
+		}
+		edb.ThreeGrams[gram] = append(edb.ThreeGrams[gram], video)
+	}
 }
 
 func (edb *EntDB) AddVideoFromLoad(evfl *EntVideoForLoad) {
@@ -150,7 +171,6 @@ func (edb *EntDB) AddVideoFromLoad(evfl *EntVideoForLoad) {
 	ev.Keywords = evfl.Keywords
 	ev.ThumbUrls = evfl.ThumbUrls
 	ev.VideoUrls = evfl.VideoUrls
-	ev.Aliases = evfl.Aliases
 
 	for _, tag_id := range evfl.Tags {
 		tag, err := edb.GetTagById(tag_id)
@@ -186,7 +206,7 @@ func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 	return nil, errors.New("EntVideo not found")
 }
 
-func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
+func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, 0)
 
 	videos, _ := edb.RelevantBySearch(Video.Slug, 300)
@@ -215,7 +235,7 @@ func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bo
 	return res
 }
 
-func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
+func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, Size)
 
 	pos := 0
@@ -388,8 +408,9 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 Get RelevantVideos for EntVideo
 Exclude MainVideo from the result
 */
-func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
+func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]EntVideo, int) {
 	Title := html.UnescapeString(Video.Title)
+	// TODO: migrate to the slug algo
 	QueryTokens := strings.Split(strings.ToLower(Title), " ")
 	Counter := make(map[*EntVideo]int)
 
@@ -412,7 +433,7 @@ func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*Ent
 	}
 
 	type KeyValue struct {
-		Video *EntVideo
+		Video EntVideo
 		Value int
 	}
 
@@ -422,14 +443,14 @@ func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*Ent
 		if k.Id == Video.Id {
 			continue
 		}
-		SortedSlice = append(SortedSlice, KeyValue{k, v})
+		SortedSlice = append(SortedSlice, KeyValue{*k, v})
 	}
 
 	sort.Slice(SortedSlice, func(i, j int) bool {
 		return SortedSlice[i].Value > SortedSlice[j].Value
 	})
 
-	res := make([]*EntVideo, Min(len(SortedSlice), Size))
+	res := make([]EntVideo, Min(len(SortedSlice), Size))
 
 	for i := 0; i < Min(len(SortedSlice), Size); i++ {
 		res[i] = SortedSlice[i].Video
@@ -503,11 +524,11 @@ func (ev *EntDB) RandomSetByTag(TagSlug string, Size int) ([]*EntVideo, int) {
 	return res, len(tags)
 }
 
-func (edb *EntDB) RandomSet(Size int) []*EntVideo {
-	res := make([]*EntVideo, Size)
+func (edb *EntDB) RandomSet(Size int) []EntVideo {
+	res := make([]EntVideo, Size)
 
 	for i := 0; i < Size; i++ {
-		res[i] = edb.Random()
+		res[i] = *edb.Random()
 	}
 
 	return res
@@ -574,5 +595,7 @@ func NewEntDB(path string) *EntDB {
 		DictModels:  make(map[int]*EntKeyword),
 		DictVideos:  make(map[uint]*EntVideo),
 		Origins:     make(map[Origin]int),
+		TwoGrams:    make(map[string][]*EntVideo),
+		ThreeGrams:  make(map[string][]*EntVideo),
 	}
 }

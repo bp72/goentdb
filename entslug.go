@@ -6,6 +6,6 @@ import (
 
 type EntSlug string
 
-func (self EntSlug) GetSlug() string {
-	return strings.Replace(strings.Replace(strings.ToLower(string(self)), " ", "-", -1), "#", "", -1)
+func (s EntSlug) GetSlug() string {
+	return strings.Replace(strings.Replace(strings.ToLower(string(s)), " ", "-", -1), "#", "", -1)
 }

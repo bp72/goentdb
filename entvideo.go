@@ -1,7 +1,7 @@
 package goentdb
 
 import (
-	"errors"
+	"bytes"
 	"fmt"
 	"html"
 	"math/rand"
@@ -25,7 +25,6 @@ type EntVideoForLoad struct {
 	Keywords   []*EntKeyword
 	ThumbUrls  []string
 	VideoUrls  []string
-	Aliases    []string
 }
 
 type EntVideo struct {
@@ -44,7 +43,6 @@ type EntVideo struct {
 	Keywords   []*EntKeyword
 	ThumbUrls  []string
 	VideoUrls  []string
-	Aliases    []string
 	MapKeyword map[string]*EntKeyword // Ad-hoc. TODO review later
 	Owner      *EntDB                 // Ad-hoc. TODO review later
 }
@@ -54,10 +52,7 @@ func (ev *EntVideo) GetTitle() string {
 }
 
 func (ev *EntVideo) IsRefererDisabled() bool {
-	if ev.Origin == OriginAlphaporno {
-		return true
-	}
-	return false
+	return ev.Origin == OriginAlphaporno
 }
 
 func (ev *EntVideo) IsEmbed() bool {
@@ -109,6 +104,23 @@ func (ev *EntVideo) GetThumb() string {
 	return fmt.Sprintf("%s/%s", ev.Owner.ThumbBaseUrl, ev.GetPosterThumbRelatedPath())
 }
 
+func (ev *EntVideo) GetSlug() string {
+	lc := strings.ToLower(ev.Title)
+	var buffer bytes.Buffer
+
+	for _, char := range lc {
+		if (char-'a' >= 0 && char-'a' < 26) || (char-'0' >= 0 && char-'0' < 10) || (char-' ' == 0) {
+			if char == ' ' {
+				buffer.WriteRune('-')
+			} else {
+				buffer.WriteRune(char)
+			}
+		}
+	}
+
+	return buffer.String()
+}
+
 func (ev *EntVideo) GetMD5() string {
 	return MD5(ev.Slug)
 }
@@ -151,7 +163,7 @@ func (ev *EntVideo) GetKeywordBySlug(Slug string) (*EntKeyword, error) {
 			return kw, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("EntVideo %d does not have %s", ev.Id, Slug))
+	return nil, fmt.Errorf("EntVideo %d does not have %s", ev.Id, Slug)
 }
 
 func (ev *EntVideo) ToLoad() EntVideoForLoad {
@@ -169,7 +181,6 @@ func (ev *EntVideo) ToLoad() EntVideoForLoad {
 	evfl.Keywords = ev.Keywords
 	evfl.ThumbUrls = ev.ThumbUrls
 	evfl.VideoUrls = ev.VideoUrls
-	evfl.Aliases = ev.Aliases
 
 	for _, tag := range ev.Tags {
 		evfl.Tags = append(evfl.Tags, tag.Id)
@@ -186,4 +197,50 @@ func NewEntVideo(edb *EntDB) *EntVideo {
 		MapKeyword: make(map[string]*EntKeyword),
 		Owner:      edb,
 	}
+}
+
+func (v *EntVideo) GetTitleTokens(excludeStopWords bool) []string {
+	lcTitle := strings.ToLower(v.GetTitle())
+	var buffer bytes.Buffer
+
+	res := make([]string, 0)
+
+	for _, char := range lcTitle {
+		if (char-'a' >= 0 && char-'a' < 26) || (char-'0' >= 0 && char-'0' < 10) || (char-' ' == 0) {
+			if char == ' ' {
+				res = append(res, buffer.String())
+				if excludeStopWords {
+					if _, exists := StopWordsMap[res[len(res)-1]]; exists {
+						res = res[:len(res)-1]
+					}
+				}
+				buffer.Reset()
+			} else {
+				buffer.WriteRune(char)
+			}
+		}
+	}
+	res = append(res, buffer.String())
+	if excludeStopWords {
+		if _, exists := StopWordsMap[res[len(res)-1]]; exists {
+			res = res[:len(res)-1]
+		}
+	}
+	return res
+}
+
+func (v *EntVideo) GetNGrams(useStopWords bool) ([]string, []string) {
+	tokens := v.GetTitleTokens(useStopWords)
+	tokens2Gram := make([]string, 0)
+	tokens3Gram := make([]string, 0)
+
+	for i := 0; i < len(tokens)-1; i++ {
+		tokens2Gram = append(tokens2Gram, tokens[i]+" "+tokens[i+1])
+	}
+
+	for i := 0; i < len(tokens)-2; i++ {
+		tokens3Gram = append(tokens3Gram, tokens[i]+" "+tokens[i+1]+" "+tokens[i+2])
+	}
+
+	return tokens2Gram, tokens3Gram
 }

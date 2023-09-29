@@ -23,31 +23,31 @@ func GenerateEntVideos(edb *EntDB) []*EntVideo {
 	video1.Title = "title number 1"
 	video1.Slug = "title-number-1"
 	video1.Tags = []*EntKeyword{
-		&EntKeyword{Phrase: "tag 1", Type: EntKeywordTag},
-		&EntKeyword{Phrase: "tag 2", Type: EntKeywordTag},
+		{Phrase: "tag 1", Type: EntKeywordTag},
+		{Phrase: "tag 2", Type: EntKeywordTag},
 	}
 	video1.Models = []*EntKeyword{
-		&EntKeyword{Phrase: "model 1", Type: EntKeywordModel},
-		&EntKeyword{Phrase: "model 2", Type: EntKeywordModel},
+		{Phrase: "model 1", Type: EntKeywordModel},
+		{Phrase: "model 2", Type: EntKeywordModel},
 	}
 	video1.Keywords = []*EntKeyword{
-		&EntKeyword{Phrase: "aaa bbb ccc", Type: EntKeywordKeyword},
-		&EntKeyword{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
+		{Phrase: "aaa bbb ccc", Type: EntKeywordKeyword},
+		{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
 	}
 	video2 := &EntVideo{
 		Id:    uint(123457),
 		Title: "title number 2",
 		Slug:  "title-number-2",
 		Tags: []*EntKeyword{
-			&EntKeyword{Phrase: "tag 2", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 3", Type: EntKeywordTag},
+			{Phrase: "tag 2", Type: EntKeywordTag},
+			{Phrase: "tag 3", Type: EntKeywordTag},
 		},
 		Models: []*EntKeyword{
-			&EntKeyword{Phrase: "model 3", Type: EntKeywordModel},
+			{Phrase: "model 3", Type: EntKeywordModel},
 		},
 		Keywords: []*EntKeyword{
-			&EntKeyword{Phrase: "ccc ddd fff", Type: EntKeywordKeyword},
-			&EntKeyword{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
+			{Phrase: "ccc ddd fff", Type: EntKeywordKeyword},
+			{Phrase: "bbb ccc ddd", Type: EntKeywordKeyword},
 		},
 	}
 	video3 := &EntVideo{
@@ -55,19 +55,19 @@ func GenerateEntVideos(edb *EntDB) []*EntVideo {
 		Title: "title number 3",
 		Slug:  "title-number-3",
 		Tags: []*EntKeyword{
-			&EntKeyword{Phrase: "tag 3", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 4", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 5", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 6", Type: EntKeywordTag},
+			{Phrase: "tag 3", Type: EntKeywordTag},
+			{Phrase: "tag 4", Type: EntKeywordTag},
+			{Phrase: "tag 5", Type: EntKeywordTag},
+			{Phrase: "tag 6", Type: EntKeywordTag},
 		},
 		Models: []*EntKeyword{
-			&EntKeyword{Phrase: "model 4", Type: EntKeywordModel},
-			&EntKeyword{Phrase: "model 5", Type: EntKeywordModel},
-			&EntKeyword{Phrase: "model 6", Type: EntKeywordModel},
+			{Phrase: "model 4", Type: EntKeywordModel},
+			{Phrase: "model 5", Type: EntKeywordModel},
+			{Phrase: "model 6", Type: EntKeywordModel},
 		},
 		Keywords: []*EntKeyword{
-			&EntKeyword{Phrase: "#Aaaa bbbb cccc", Type: EntKeywordKeyword},
-			&EntKeyword{Phrase: "#CCCC dddd ssss", Type: EntKeywordKeyword},
+			{Phrase: "#Aaaa bbbb cccc", Type: EntKeywordKeyword},
+			{Phrase: "#CCCC dddd ssss", Type: EntKeywordKeyword},
 		},
 	}
 
@@ -76,20 +76,56 @@ func GenerateEntVideos(edb *EntDB) []*EntVideo {
 		Title: "title number 4 (no keywords)",
 		Slug:  "title-number-4-no-keywords",
 		Tags: []*EntKeyword{
-			&EntKeyword{Phrase: "tag 3", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 4", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 5", Type: EntKeywordTag},
-			&EntKeyword{Phrase: "tag 6", Type: EntKeywordTag},
+			{Phrase: "tag 3", Type: EntKeywordTag},
+			{Phrase: "tag 4", Type: EntKeywordTag},
+			{Phrase: "tag 5", Type: EntKeywordTag},
+			{Phrase: "tag 6", Type: EntKeywordTag},
 		},
 		Models: []*EntKeyword{
-			&EntKeyword{Phrase: "model 4", Type: EntKeywordModel},
-			&EntKeyword{Phrase: "model 5", Type: EntKeywordModel},
-			&EntKeyword{Phrase: "model 6", Type: EntKeywordModel},
+			{Phrase: "model 4", Type: EntKeywordModel},
+			{Phrase: "model 5", Type: EntKeywordModel},
+			{Phrase: "model 6", Type: EntKeywordModel},
 		},
 		Keywords: []*EntKeyword{},
 	}
 
-	return []*EntVideo{video1, video2, video3, video4}
+	video5 := &EntVideo{
+		Id:    uint(123460),
+		Title: "TiTlE number #5 (\"no keywords'!!!!!)",
+		Slug:  "title-number-5-no-keywords",
+		Tags: []*EntKeyword{
+			{Phrase: "tag 3", Type: EntKeywordTag},
+			{Phrase: "tag 4", Type: EntKeywordTag},
+			{Phrase: "tag 5", Type: EntKeywordTag},
+			{Phrase: "tag 6", Type: EntKeywordTag},
+		},
+		Models: []*EntKeyword{
+			{Phrase: "model 4", Type: EntKeywordModel},
+			{Phrase: "model 5", Type: EntKeywordModel},
+			{Phrase: "model 6", Type: EntKeywordModel},
+		},
+		Keywords: []*EntKeyword{},
+	}
+
+	video6 := &EntVideo{
+		Id:    uint(123461),
+		Title: "TiTlE with a stop word number #6 (\"no keywords'!!!!!)",
+		Slug:  "title-number-6-no-keywords",
+		Tags: []*EntKeyword{
+			{Phrase: "tag 3", Type: EntKeywordTag},
+			{Phrase: "tag 4", Type: EntKeywordTag},
+			{Phrase: "tag 5", Type: EntKeywordTag},
+			{Phrase: "tag 6", Type: EntKeywordTag},
+		},
+		Models: []*EntKeyword{
+			{Phrase: "model 4", Type: EntKeywordModel},
+			{Phrase: "model 5", Type: EntKeywordModel},
+			{Phrase: "model 6", Type: EntKeywordModel},
+		},
+		Keywords: []*EntKeyword{},
+	}
+
+	return []*EntVideo{video1, video2, video3, video4, video5, video6}
 }
 
 func TestEntDBAdd(t *testing.T) {
@@ -101,7 +137,7 @@ func TestEntDBAdd(t *testing.T) {
 		entdb.Add(video)
 	}
 
-	Expected := 4
+	Expected := 6
 	Got := len(entdb.Items)
 	if Got != Expected {
 		t.Errorf("test add video to DB failed: got %v, wanted %v", Got, Expected)
@@ -119,13 +155,25 @@ func TestEntDBAdd(t *testing.T) {
 		t.Errorf("test add video to DB models count failed: got %v, wanted %v", Got, Expected)
 	}
 
-	Expected = 9
+	Expected = 11
 	Got = len(entdb.Keywords)
 	if Got != Expected {
 		t.Errorf("test add video to DB keywords count failed: got %v, wanted %v", Got, Expected)
 		for kw, ev := range entdb.Keywords {
 			t.Errorf("kw %s -> %d\n", kw, ev.Id)
 		}
+	}
+
+	Expected = 16
+	Got = len(entdb.TwoGrams)
+	if Got != Expected {
+		t.Errorf("test add video to DB 2-grams count failed: got %v, wanted %v", Got, Expected)
+	}
+
+	Expected = 16
+	Got = len(entdb.ThreeGrams)
+	if Got != Expected {
+		t.Errorf("test add video to DB 3-grams count failed: got %v, wanted %v", Got, Expected)
 	}
 }
 
