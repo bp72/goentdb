@@ -206,7 +206,7 @@ func (edb *EntDB) GetVideoByMD5(key string) (*EntVideo, error) {
 	return nil, errors.New("EntVideo not found")
 }
 
-func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []EntVideo) []*EntKeyword {
+func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, 0)
 
 	videos, _ := edb.RelevantBySearch(Video.Slug, 300)
@@ -235,7 +235,7 @@ func (edb *EntDB) GetKeywordsRelatedSet(Video *EntVideo, Size int, UseSeoPool bo
 	return res
 }
 
-func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []EntVideo) []*EntKeyword {
+func (edb *EntDB) GetKeywordsRandomSet(Size int, UseSeoPool bool, Exclude []*EntVideo) []*EntKeyword {
 	res := make([]*EntKeyword, Size)
 
 	pos := 0
@@ -408,7 +408,7 @@ func (edb *EntDB) RelevantBySearch(Slug string, Size int) ([]*EntVideo, int) {
 Get RelevantVideos for EntVideo
 Exclude MainVideo from the result
 */
-func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]EntVideo, int) {
+func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]*EntVideo, int) {
 	Title := html.UnescapeString(Video.Title)
 	// TODO: migrate to the slug algo
 	QueryTokens := strings.Split(strings.ToLower(Title), " ")
@@ -433,7 +433,7 @@ func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]EntV
 	}
 
 	type KeyValue struct {
-		Video EntVideo
+		Video *EntVideo
 		Value int
 	}
 
@@ -443,14 +443,14 @@ func (edb *EntDB) GetRelevantForVideoBySearch(Video *EntVideo, Size int) ([]EntV
 		if k.Id == Video.Id {
 			continue
 		}
-		SortedSlice = append(SortedSlice, KeyValue{*k, v})
+		SortedSlice = append(SortedSlice, KeyValue{k, v})
 	}
 
 	sort.Slice(SortedSlice, func(i, j int) bool {
 		return SortedSlice[i].Value > SortedSlice[j].Value
 	})
 
-	res := make([]EntVideo, Min(len(SortedSlice), Size))
+	res := make([]*EntVideo, Min(len(SortedSlice), Size))
 
 	for i := 0; i < Min(len(SortedSlice), Size); i++ {
 		res[i] = SortedSlice[i].Video
@@ -524,11 +524,11 @@ func (ev *EntDB) RandomSetByTag(TagSlug string, Size int) ([]*EntVideo, int) {
 	return res, len(tags)
 }
 
-func (edb *EntDB) RandomSet(Size int) []EntVideo {
-	res := make([]EntVideo, Size)
+func (edb *EntDB) RandomSet(Size int) []*EntVideo {
+	res := make([]*EntVideo, Size)
 
 	for i := 0; i < Size; i++ {
-		res[i] = *edb.Random()
+		res[i] = edb.Random()
 	}
 
 	return res
